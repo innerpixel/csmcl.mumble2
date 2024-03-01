@@ -4,38 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #f0f0f0;
+            overflow: hidden;
+        }
+
         #canvas{
             border: 1px solid black;
             display: block;
-            margin: 0 auto;
+            margin: 0 ;
             background: #fffacc;
         }
     </style>
-    <title>Game Template</title>
+    <title>CSMCL.YOU @ CSMCL ME</title>
 </head>
 <body>
-    <canvas id="canvas" tabindex=0 ></canvas>
+    <canvas id="canvas" tabindex=0 width="640" height="480"></canvas>
 
     <script src="./csmcl/mocorgo.js"></script>
     <script src="./csmcl/userInput.js"></script>
-    <script src="./csmcl/csmcl-space.js"></script>
-    
+    <script src="./csmcl/csmcl.js"></script>
 </body>
-<style>
-    * {
-        box-sizing: border-box; 
-        margin: 0; padding: 0; 
-    }
-    body {
-        font-family: Arial, sans-serif;
-        background-color: #f4f4f4;
-        overflow: hidden;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-    }
-
-</style>
-
 </html>

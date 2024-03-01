@@ -90,7 +90,6 @@ class Matrix{
 //classes storing the primitive shapes: Line, Circle, Rectangle, Triangle
 class Line{
     constructor(x0, y0, x1, y1){
-        this.color = ""
         this.vertex = [];
         this.vertex[0] = new Vector(x0, y0);
         this.vertex[1] = new Vector(x1, y1);
@@ -99,15 +98,15 @@ class Line{
         this.pos = new Vector((this.vertex[0].x+this.vertex[1].x)/2, (this.vertex[0].y+this.vertex[1].y)/2);
     }
 
-    draw(){
+    draw(color){
         ctx.beginPath();
         ctx.moveTo(this.vertex[0].x, this.vertex[0].y);
         ctx.lineTo(this.vertex[1].x, this.vertex[1].y);
-        if (!this.color){
+        if (color === ""){
             ctx.strokeStyle = "black";
             ctx.stroke();
         } else {
-            ctx.strokeStyle = this.color;
+            ctx.strokeStyle = color;
             ctx.stroke();
         }
         ctx.strokeStyle = "";
@@ -117,20 +116,19 @@ class Line{
 
 class Circle{
     constructor(x, y, r){
-        this.color = ""
         this.vertex = [];
         this.pos = new Vector(x, y);
         this.r = r;
     }
-
-    draw(){
+    
+    draw(color){
         ctx.beginPath();
         ctx.arc(this.pos.x, this.pos.y, this.r, 0, 2*Math.PI);
-        if (!this.color){
+        if (color === ""){
             ctx.strokeStyle = "black";
             ctx.stroke();
         } else {
-            ctx.fillStyle = this.color;
+            ctx.fillStyle = color;
             ctx.fill();
         }
         ctx.fillStyle = "";
@@ -140,7 +138,6 @@ class Circle{
 
 class Rectangle{
     constructor(x1, y1, x2, y2, w){
-        this.color = ""
         this.vertex = [];
         this.vertex[0] = new Vector(x1, y1);
         this.vertex[1] = new Vector(x2, y2);
@@ -155,18 +152,18 @@ class Rectangle{
         this.rotMat = new Matrix(2,2);
     }
 
-    draw(){
+    draw(color){
         ctx.beginPath();
         ctx.moveTo(this.vertex[0].x, this.vertex[0].y);
         ctx.lineTo(this.vertex[1].x, this.vertex[1].y);
         ctx.lineTo(this.vertex[2].x, this.vertex[2].y);
         ctx.lineTo(this.vertex[3].x, this.vertex[3].y);
         ctx.lineTo(this.vertex[0].x, this.vertex[0].y);
-        if (!this.color){
+        if (color === ""){
             ctx.strokeStyle = "black";
             ctx.stroke();
         } else {
-            ctx.fillStyle = this.color;
+            ctx.fillStyle = color;
             ctx.fill();
         }
         ctx.fillStyle = "";
@@ -185,7 +182,6 @@ class Rectangle{
 
 class Triangle{
     constructor(x1, y1, x2, y2, x3, y3){
-        this.color = ""
         this.vertex = [];
         this.vertex[0] = new Vector(x1, y1);
         this.vertex[1] = new Vector(x2, y2);
@@ -201,17 +197,17 @@ class Triangle{
         this.rotMat = new Matrix(2,2);
     }
 
-    draw(){
+    draw(color){
         ctx.beginPath();
         ctx.moveTo(this.vertex[0].x, this.vertex[0].y);
         ctx.lineTo(this.vertex[1].x, this.vertex[1].y);
         ctx.lineTo(this.vertex[2].x, this.vertex[2].y);
         ctx.lineTo(this.vertex[0].x, this.vertex[0].y);
-        if (!this.color){
+        if (color === ""){
             ctx.strokeStyle = "black";
             ctx.stroke();
         } else {
-            ctx.fillStyle = this.color;
+            ctx.fillStyle = color;
             ctx.fill();
         }
         ctx.fillStyle = "";
@@ -241,8 +237,8 @@ class Body{
         this.friction = 0;
         this.angFriction = 0;
         this.maxSpeed = 0;
-        this.layer = 0;
         this.color = "";
+        this.layer = 0;
 
         this.up = false;
         this.down = false;
@@ -259,13 +255,14 @@ class Body{
         this.player = false;
         BODIES.push(this);
     }
+    
+    setColor(color){
+        this.color = color;
+    }
 
     render(){
-        if(this.color){
-            this.setColor(this.color)
-        }
         for (let i in this.comp){
-            this.comp[i].draw();
+            this.comp[i].draw(this.color);
         }
     }
     reposition(){
@@ -278,11 +275,6 @@ class Body{
         this.angVel *= (1-this.angFriction);
     }
     keyControl(){}
-    setColor(color){
-        this.comp.forEach(comp => {
-            comp.color = color
-        })
-    }
     remove(){
         if (BODIES.indexOf(this) !== -1){
             BODIES.splice(BODIES.indexOf(this), 1);
@@ -314,19 +306,23 @@ class Ball extends Body{
     }
 
     keyControl(){
-        this.acc.x = 0
-        this.acc.y = 0
         if(this.left){
-            this.acc.x -= this.keyForce;
+            this.acc.x = -this.keyForce;
         }
         if(this.up){
-            this.acc.y -= this.keyForce;
+            this.acc.y = -this.keyForce;
         }
         if(this.right){
-            this.acc.x += this.keyForce;
+            this.acc.x = this.keyForce;
         }
         if(this.down){
-            this.acc.y += this.keyForce;
+            this.acc.y = this.keyForce;
+        }
+        if(!this.left && !this.right){
+            this.acc.x = 0;
+        }
+        if(!this.up && !this.down){
+            this.acc.y = 0;
         }
     }
 }
@@ -506,10 +502,7 @@ class Star extends Body{
 class Wall extends Body{
     constructor(x1, y1, x2, y2){
         super();
-        this.start = new Vector(x1, y1);
-        this.end = new Vector(x2, y2);
         this.comp = [new Line(x1, y1, x2, y2)];
-        this.dir = this.end.subtr(this.start).unit();
         this.pos = new Vector((x1+x2)/2, (y1+y2)/2);
     }
 }
@@ -563,18 +556,15 @@ class CollData{
     }
 }
 
-// Returns with a number rounded to <precision> decimals
 function round(number, precision){
     let factor = 10**precision;
     return Math.round(number * factor) / factor;
 }
 
-// Returns with a random integer
 function randInt(min, max){
     return Math.floor(Math.random() * (max-min+1)) + min;
 }
 
-// Draws a circle around a specific point
 function testCircle(x, y, color="black"){
     ctx.beginPath();
     ctx.arc(x, y, 10, 0, 2*Math.PI);
@@ -583,8 +573,6 @@ function testCircle(x, y, color="black"){
     ctx.closePath();
 }
 
-// Takes a vector and a line
-// Returns with the vector of the lines closest point to the given vector
 function closestPointOnLS(p, w1){
     let ballToWallStart = w1.start.subtr(p);
     if(Vector.dot(w1.dir, ballToWallStart) > 0){
@@ -599,42 +587,6 @@ function closestPointOnLS(p, w1){
     let closestDist = Vector.dot(w1.dir, ballToWallStart);
     let closestVect = w1.dir.mult(closestDist);
     return w1.start.subtr(closestVect);
-}
-
-// Takes 2 endpoints of 2 line segments (aka 4 vectors)
-// Returns with the intersection vector or false if there is no intersection
-function lineSegmentIntersection(p1,p2,q1,q2){
-    let resultVector = new Vector(0,0)
-    let r = p2.subtr(p1)
-    let s = q2.subtr(q1)
-    let qp = q1.subtr(p1)
-    let denom = Vector.cross(r,s)
-    
-    let u = Vector.cross(qp,r) / denom;
-    let t = Vector.cross(qp,s) / denom;
-
-    // Case 1: two line segments are parallel and non-intersecting
-    if(denom === 0 && Vector.cross(qp,r) !== 0){
-        return false
-    }
-    // Case 2: two line segments are collinear
-    if(denom === 0 && Vector.cross(qp,r) === 0){
-        // True: overlapping, false: disjoint
-        if(((q1.x-p1.x < 0)&&(q1.x-p2.x < 0)&&(q2.x-p1.x < 0)&&(q2.x-p2.x < 0)) &&
-            ((q1.y-p1.y < 0)&&(q1.y-p2.y < 0)&&(q2.y-p1.y < 0)&&(q2.y-p2.y < 0))){
-            return false
-        } else {
-            resultVector = p2   // fix...
-            return resultVector
-        }
-    }
-    // Case 3: If 0<=t<=1 and 0<=u<=1, they have an intersection, otherwise nope
-    if((t >= 0) && (t <= 1) && (u >= 0) && (u <= 1)){
-        resultVector = p1.add(r.mult(t))
-        return resultVector
-    } else {
-        return false
-    }     
 }
 
 //Separating axis theorem on two objects
@@ -802,17 +754,6 @@ function setBallVerticesAlongAxis(obj, axis){
 }
 //Thats it for the SAT and its support functions
 
-//Collision is handled based on the body layer
-//Layer -1: collision handling with layer 0 bodies ONLY
-//Layer -2: no collision handling with any other body
-function collisionHandlingCondition(body1, body2){
-    return (
-        (body1.layer === body2.layer && !(body1.layer === -1 || body1.layer === -2)) ||
-        (body1.layer === 0 && body2.layer !== -2) || 
-        (body2.layer === 0 && body1.layer !== -2) 
-    )
-}
-
 //Prevents objects to float away from the canvas
 function putWallsAround(x1, y1, x2, y2){
     let edge1 = new Wall(x1, y1, x2, y1);
@@ -858,12 +799,12 @@ function physicsLoop(timestamp) {
     
     BODIES.forEach((b, index) => {
         for(let bodyPair = index+1; bodyPair < BODIES.length; bodyPair++){
-           if(collisionHandlingCondition(BODIES[index], BODIES[bodyPair])){               
-                let bestSat = collide(BODIES[index], BODIES[bodyPair]);
-                if(bestSat){
+           if((BODIES[index].layer === BODIES[bodyPair].layer ||
+               BODIES[index].layer === 0 || BODIES[bodyPair].layer === 0) && 
+               collide(BODIES[index], BODIES[bodyPair])){
+                    let bestSat = collide(BODIES[index], BODIES[bodyPair]);
                     COLLISIONS.push(new CollData(BODIES[index], BODIES[bodyPair], bestSat.axis, bestSat.pen, bestSat.vertex));
-                }           
-            }
+           }
         }
     });
 
@@ -873,22 +814,18 @@ function physicsLoop(timestamp) {
     });
 }
 
-//If anything else (text, data...) needs to be rendered on the canvas
-function userInterface(){};
-
 function renderLoop(){
     ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
     BODIES.forEach((b) => {
         b.render();
     })
-    userInterface();
 }
 
 function mainLoop(){
     userInteraction();
+    gameLogic();
     physicsLoop();
     renderLoop();
-    gameLogic();
     requestAnimationFrame(mainLoop);
 }
 
